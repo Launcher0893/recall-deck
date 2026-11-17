@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue';
-import { Button as AButton, Empty as AEmpty, Tag as ATag } from '@arco-design/web-vue';
+import { Alert as AAlert, Button as AButton, Empty as AEmpty, Tag as ATag } from '@arco-design/web-vue';
+import { errorMessage } from '../../platform/tinyjs';
 import type { Card, CardReviewUpdate, Deck } from '../../shared/models';
 import ReviewSession from '../review/ReviewSession.vue';
 import { reviewQueue } from '../review/reviewQueue';
@@ -10,10 +11,14 @@ import './study.css';
 const props = defineProps<{
   cards: Card[];
   decks: Deck[];
+  hasCards: boolean;
+  addExamples: () => Promise<void>;
   applyReview: (update: CardReviewUpdate) => void;
 }>();
 const emit = defineEmits<{ manage: [] }>();
 const testCards = shallowRef<Card[]>();
+const addingExamples = shallowRef(false);
+const exampleError = shallowRef('');
 const currentId = shallowRef<number>();
 const now = shallowRef(Date.now());
 const queue = computed(() => reviewQueue(props.cards, now.value));
@@ -52,6 +57,19 @@ function closeTest() {
   updateClock();
   testCards.value = undefined;
 }
+
+async function addExamples() {
+  if (addingExamples.value) return;
+  addingExamples.value = true;
+  exampleError.value = '';
+  try {
+    await props.addExamples();
+  } catch (reason) {
+    exampleError.value = '无法添加示例卡片。' + errorMessage(reason);
+  } finally {
+    addingExamples.value = false;
+  }
+}
 </script>
 
 <template>
@@ -72,10 +90,15 @@ function closeTest() {
     </StudyCard>
     <div v-else class="panel study-empty">
       <AEmpty :description="cards.length ? '当前的学习与复习已完成' : '还没有加入学习的卡片'" />
+      <p v-if="!hasCards" class="muted study-guide">在卡组管理中新建卡片，勾选「加入学习」，再回到这里翻面复习。</p>
       <p v-if="nextDue !== null" class="muted">
         下一次复习 · <time :datetime="new Date(nextDue).toISOString()">{{ dateFormat.format(nextDue) }}</time>
       </p>
-      <AButton v-if="!cards.length" type="primary" @click="emit('manage')">前往卡组勾选</AButton>
+      <AAlert v-if="exampleError" type="error" role="alert">{{ exampleError }}</AAlert>
+      <div v-if="!cards.length" class="heading-actions">
+        <AButton type="primary" @click="emit('manage')">{{ hasCards ? '前往卡组勾选' : '前往卡组管理' }}</AButton>
+        <AButton v-if="!hasCards" :loading="addingExamples" @click="addExamples">添加示例卡片</AButton>
+      </div>
     </div>
   </section>
 </template>

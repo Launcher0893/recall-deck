@@ -2,6 +2,7 @@ import type { Card, CardDraft, CardReviewUpdate, Deck, Library, ReviewRating } f
 
 interface Methods {
   'library.list': { params: Record<string, never>; result: Library };
+  'library.addExamples': { params: Record<string, never>; result: Library };
   'deck.save': { params: { deckId?: number; name: string }; result: Deck };
   'card.save': { params: CardDraft & { cardId?: number }; result: Card };
   'card.remove': { params: { cardId: number }; result: null };

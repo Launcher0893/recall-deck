@@ -26,6 +26,7 @@
 .study-rating-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .study-error { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .study-empty { display: grid; justify-items: center; gap: 15px; padding: 42px 16px; }
+.study-guide { max-width: 28em; text-align: center; }
 
 @keyframes study-card-enter {
   from { opacity: 0; transform: translateY(8px); }

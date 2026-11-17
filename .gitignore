@@ -146,6 +146,10 @@ vite.config.ts.timestamp-*
 .vite/
 .build/
 
+# Local card database and SQLite sidecar files
+*.sqlite
+*.sqlite-*
+
 # Astro generated types
 .astro/
 

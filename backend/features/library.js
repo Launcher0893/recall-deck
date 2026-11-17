@@ -13,13 +13,37 @@ function toCard(row) {
   return { ...row, studySelected: row.studySelected === 1 };
 }
 
+const examples = [
+  { front: '用英语怎么说「图书馆」？', back: '**library**', expected: 'library' },
+  { front: '计算 $3^2$。', back: '$3^2 = 3 \\times 3 = 9$。', expected: '9' },
+  { front: '水的化学式是什么？', back: '**H₂O**，由两个氢原子和一个氧原子组成。', expected: 'H2O' },
+];
+
+function readLibrary(db) {
+  return {
+    decks: rows(db, 'SELECT id, name FROM decks ORDER BY id'),
+    cards: rows(db, 'SELECT ' + cardFields + ' FROM cards ORDER BY id').map(toCard),
+  };
+}
+
 export const libraryApi = {
   async 'library.list'(_params, app) {
+    return readLibrary(await getDatabase(app));
+  },
+
+  async 'library.addExamples'(_params, app) {
     const db = await getDatabase(app);
-    return {
-      decks: rows(db, 'SELECT id, name FROM decks ORDER BY id'),
-      cards: rows(db, 'SELECT ' + cardFields + ' FROM cards ORDER BY id').map(toCard),
-    };
+    return db.transaction(() => {
+      if (rows(db, 'SELECT 1 FROM cards LIMIT 1').length) return readLibrary(db);
+
+      const [deck] = rows(db, 'INSERT INTO decks (name) VALUES (?) RETURNING id', '示例卡组');
+      for (const { front, back, expected } of examples) {
+        rows(db, `
+          INSERT INTO cards (deckId, front, back, expected, studySelected) VALUES (?, ?, ?, ?, 1)
+        `, deck.id, front, back, expected);
+      }
+      return readLibrary(db);
+    }).immediate();
   },
 
   async 'deck.save'({ deckId, name }, app) {

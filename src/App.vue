@@ -12,8 +12,8 @@ import { useLibrary } from './features/library/useLibrary';
 import StudyPage from './features/study/StudyPage.vue';
 
 const {
-  decks, selectedId, selectedDeck, selectedCards, studyCards, counts, loading, loadError,
-  load, saveDeck, saveCard, removeCard, setStudySelected, updateCardStudy,
+  decks, selectedId, selectedDeck, selectedCards, studyCards, hasCards, counts, loading, loadError,
+  load, addExamples, saveDeck, saveCard, removeCard, setStudySelected, updateCardStudy,
 } = useLibrary();
 const page = shallowRef<'study' | 'library'>('study');
 const dialog = shallowRef<LibraryDialog>();
@@ -46,7 +46,8 @@ onMounted(load);
         <AAlert type="error" role="alert">{{ loadError }}</AAlert>
         <AButton @click="load">重试读取</AButton>
       </div>
-      <StudyPage v-else-if="page === 'study'" :decks="decks" :cards="studyCards" :apply-review="updateCardStudy"
+      <StudyPage v-else-if="page === 'study'" :decks="decks" :cards="studyCards" :has-cards="hasCards"
+        :add-examples="addExamples" :apply-review="updateCardStudy"
         @manage="page = 'library'" />
       <CardLibrary v-else-if="selectedDeck" :key="selectedDeck.id" :deck="selectedDeck" :cards="selectedCards"
         :set-study-selected="setStudySelected"
