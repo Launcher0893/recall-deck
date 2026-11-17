@@ -1,0 +1,38 @@
+.sidebar {
+  overflow: auto;
+  padding: 18px 12px;
+  background: white;
+  border-right: 1px solid var(--border-soft);
+}
+
+.sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 7px 10px; }
+.sidebar-heading h2 { font-size: 13px; color: var(--color-text-2); }
+.deck-link {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  margin: 3px 0;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.deck-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deck-link small { color: var(--color-text-3); font-variant-numeric: tabular-nums; }
+.deck-link:hover:not(:disabled) { background: var(--color-fill-2); }
+.deck-link-current, .deck-link-current:hover:not(:disabled) { color: #0d4edb; background: #e8f1ff; font-weight: 600; }
+.deck-link-current small { color: inherit; }
+.deck-link:disabled { cursor: default; }
+
+
+@media (max-width: 600px) {
+  .sidebar { padding-inline: 6px; }
+  .deck-link { grid-template-columns: minmax(0, 1fr) auto; }
+  .deck-link svg { display: none; }
+}

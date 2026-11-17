@@ -1,0 +1,42 @@
+.app-shell {
+  display: grid;
+  grid-template: 60px minmax(0, 1fr) / 220px minmax(0, 1fr);
+  height: 100vh;
+}
+
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 22px;
+  background: white;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-size: 20px;
+}
+
+.brand-name { font-size: 18px; font-weight: 650; letter-spacing: -0.025em; }
+.brand-caption { color: var(--color-text-3); padding-left: 12px; border-left: 1px solid var(--border-soft); }
+
+.workspace { overflow: auto; }
+.workspace-content { max-width: 1136px; margin: 0 auto; padding: 30px 32px 50px; }
+
+@media (max-width: 820px) {
+  .app-shell { grid-template-columns: 166px minmax(0, 1fr); }
+  .workspace-content { padding-inline: 20px; }
+}
+
+@media (max-width: 600px) {
+  .app-shell { grid-template-columns: 126px minmax(0, 1fr); }
+  .workspace-content { padding: 18px 12px 35px; }
+}

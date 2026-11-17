@@ -1,0 +1,33 @@
+:root {
+  font-family: Inter, "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  color: var(--color-text-1);
+  background: #f2f4f8;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  --border-soft: #e6e9f0;
+  --accent: #165dff;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-size: 14px; }
+h1, h2, h3, p { margin: 0; }
+button, textarea { font: inherit; }
+.muted { color: var(--color-text-3); }
+.required { color: rgb(var(--danger-6)); }
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.page-heading p { margin-top: 6px; }
+.heading-title, .heading-actions, .card-actions { display: flex; align-items: center; gap: 8px; }
+.heading-title { overflow-wrap: anywhere; }
+.heading-actions { flex-wrap: wrap; }
+h1 { font-size: clamp(23px, 3vw, 30px); line-height: 1.25; font-weight: 650; }
+.panel { background: white; border: 1px solid var(--border-soft); border-radius: 8px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }

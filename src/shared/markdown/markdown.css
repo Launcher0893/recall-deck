@@ -1,0 +1,14 @@
+.markdown { line-height: 1.65; overflow-wrap: anywhere; }
+.markdown > :first-child { margin-top: 0; }
+.markdown > :last-child { margin-bottom: 0; }
+.markdown :is(h1, h2, h3, h4, h5, h6) { margin: 0.8em 0 0.4em; font-size: 1.13em; }
+.markdown p { margin: 0.55em 0; }
+.markdown ul, .markdown ol { padding-inline-start: 22px; }
+.markdown li > p { margin: 0; }
+.markdown blockquote { margin: 0.7em 0; padding-left: 10px; border-left: 3px solid #c8d6ee; color: var(--color-text-2); }
+.markdown code { background: #edf1f8; border-radius: 3px; padding: 0.12em 0.3em; }
+.markdown pre { overflow: auto; background: #f1f4f9; padding: 10px 12px; border-radius: 5px; }
+.markdown pre code { background: transparent; padding: 0; }
+.markdown hr { border: 0; border-top: 1px solid var(--border-soft); }
+.formula-block { overflow: auto; }
+.formula-invalid { color: rgb(var(--danger-6)); white-space: pre-wrap; }

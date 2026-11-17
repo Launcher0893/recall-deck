@@ -1,0 +1,18 @@
+.editor { display: grid; gap: 15px; }
+.editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--color-text-3); }
+.editor-fields { display: grid; gap: 7px; }
+.editor-fields label { font-weight: 600; }
+.editor-fields label + .arco-textarea-wrapper { margin-bottom: 5px; }
+.editor-preview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.editor-preview section {
+  min-width: 0;
+  padding: 13px 15px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  max-height: 40vh;
+  overflow: auto;
+}
+.editor-preview h3 { margin-bottom: 8px; font-size: 13px; color: var(--color-text-3); }
+@media (max-width: 600px) {
+  .editor-preview { grid-template-columns: minmax(0, 1fr); }
+}
