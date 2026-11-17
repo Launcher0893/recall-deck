@@ -8,6 +8,7 @@ function existing(result, message) {
 }
 
 const cardFields = 'id, deckId, front, back, expected, reviewState, dueAt, studySelected';
+const deckFields = 'id, name, parentId, color';
 
 function toCard(row) {
   return { ...row, studySelected: row.studySelected === 1 };
@@ -21,7 +22,7 @@ const examples = [
 
 function readLibrary(db) {
   return {
-    decks: rows(db, 'SELECT id, name FROM decks ORDER BY id'),
+    decks: rows(db, 'SELECT ' + deckFields + ' FROM decks ORDER BY id'),
     cards: rows(db, 'SELECT ' + cardFields + ' FROM cards ORDER BY id').map(toCard),
   };
 }
@@ -50,8 +51,8 @@ export const libraryApi = {
     const db = await getDatabase(app);
     const label = content(name, '卡组名称', 80).trim();
     return deckId === undefined
-      ? rows(db, 'INSERT INTO decks (name) VALUES (?) RETURNING id, name', label)[0]
-      : existing(rows(db, 'UPDATE decks SET name = ? WHERE id = ? RETURNING id, name', label, id(deckId)),
+      ? rows(db, 'INSERT INTO decks (name) VALUES (?) RETURNING ' + deckFields, label)[0]
+      : existing(rows(db, 'UPDATE decks SET name = ? WHERE id = ? RETURNING ' + deckFields, label, id(deckId)),
         '卡组已不存在。');
   },
 
@@ -75,13 +76,18 @@ export const libraryApi = {
     `, ...fields, id(cardId)), '卡片已不存在。'));
   },
 
-  async 'card.setStudySelected'({ cardId, selected }, app) {
-    if (typeof selected !== 'boolean') throw new Error('请选择是否加入学习。');
+  async 'library.saveStudySelection'({ changes }, app) {
+    if (!Array.isArray(changes)) throw new Error('学习选择无效。');
     const db = await getDatabase(app);
-    const saved = existing(rows(db, `
-      UPDATE cards SET studySelected = ? WHERE id = ? RETURNING id, studySelected
-    `, Number(selected), id(cardId)), '卡片已不存在。');
-    return { id: saved.id, studySelected: saved.studySelected === 1 };
+    db.transaction(() => {
+      for (const change of changes) {
+        if (typeof change?.studySelected !== 'boolean') throw new Error('学习选择无效。');
+        existing(rows(db, `
+          UPDATE cards SET studySelected = ? WHERE id = ? RETURNING id
+        `, Number(change.studySelected), id(change.id)), '卡片已不存在，请重新打开学习卡片选择。');
+      }
+    }).immediate();
+    return null;
   },
 
   async 'card.remove'({ cardId }, app) {

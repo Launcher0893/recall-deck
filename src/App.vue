@@ -6,20 +6,28 @@ import { IconBook, IconLayers } from '@arco-design/web-vue/es/icon';
 import AppShell from './shell/AppShell.vue';
 import CardLibrary from './features/library/CardLibrary.vue';
 import DeckSidebar from './features/library/DeckSidebar.vue';
-import LibraryDialogs from './features/library/LibraryDialogs.vue';
-import type { LibraryDialog } from './features/library/LibraryDialogs.vue';
+import LibraryDialogs, { type LibraryDialog } from './features/library/LibraryDialogs.vue';
+import StudySelectionDialog from './features/library/StudySelectionDialog.vue';
 import { useLibrary } from './features/library/useLibrary';
 import StudyPage from './features/study/StudyPage.vue';
+import type { Card } from './shared/models';
 
 const {
-  decks, selectedId, selectedDeck, selectedCards, studyCards, hasCards, counts, loading, loadError,
-  load, addExamples, saveDeck, saveCard, removeCard, setStudySelected, updateCardStudy,
+  decks, cards, childDecks, selectedId, selectedDeck, selectedCards, studyCards, hasCards, counts, loading, loadError,
+  load, addExamples, saveDeck, saveCard, removeCard, saveStudySelection, updateCardStudy, cardDeckOptions,
 } = useLibrary();
 const page = shallowRef<'study' | 'library'>('study');
-const dialog = shallowRef<LibraryDialog>();
+const dialog = shallowRef<LibraryDialog | { type: 'study-selection' }>();
 
 onMounted(load);
 
+function openCardEditor(card: Card | null) {
+  const deck = selectedDeck.value;
+  if (!deck) return;
+  const options = cardDeckOptions(deck, card?.deckId);
+  const deckId = card?.deckId ?? (deck.parentId === null ? options[0].id : deck.id);
+  dialog.value = { type: 'card', card, deckId, options };
+}
 </script>
 
 <template>
@@ -36,7 +44,7 @@ onMounted(load);
             <IconLayers /><span>卡组管理</span>
           </button>
         </nav>
-        <DeckSidebar v-if="page === 'library'" :decks="decks" :counts="counts" :selected-id="selectedId"
+        <DeckSidebar v-if="page === 'library'" :decks="decks" :child-decks="childDecks" :counts="counts" :selected-id="selectedId"
           :can-create="!loading && !loadError"
           @create="dialog = { type: 'deck', deck: null }" @select="selectedId = $event" />
       </template>
@@ -50,14 +58,17 @@ onMounted(load);
         :add-examples="addExamples" :apply-review="updateCardStudy"
         @manage="page = 'library'" />
       <CardLibrary v-else-if="selectedDeck" :key="selectedDeck.id" :deck="selectedDeck" :cards="selectedCards"
-        :set-study-selected="setStudySelected"
-        @add="dialog = { type: 'card', card: null, deckId: selectedDeck.id }"
-        @edit="dialog = { type: 'card', card: $event, deckId: $event.deckId }"
+        :subdecks="childDecks.get(selectedDeck.id)"
+        :can-select-study="hasCards" @select-study="dialog = { type: 'study-selection' }"
+        @add="openCardEditor(null)"
+        @edit="openCardEditor"
         @remove="dialog = { type: 'delete', card: $event }"
         @rename="dialog = { type: 'deck', deck: selectedDeck }" />
     </AppShell>
 
-    <LibraryDialogs v-if="dialog" :dialog="dialog" :save-deck="saveDeck" :save-card="saveCard" :remove-card="removeCard"
+    <StudySelectionDialog v-if="dialog?.type === 'study-selection'" :cards="cards" :decks="decks"
+      :save-selection="saveStudySelection" @close="dialog = undefined" />
+    <LibraryDialogs v-else-if="dialog" :dialog="dialog" :save-deck="saveDeck" :save-card="saveCard" :remove-card="removeCard"
       @close="dialog = undefined" />
   </AConfigProvider>
 </template>

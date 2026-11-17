@@ -1,4 +1,4 @@
-import type { Card, CardDraft, CardReviewUpdate, Deck, Library, ReviewRating } from '../shared/models';
+import type { Card, CardDraft, CardReviewUpdate, Deck, Library, ReviewRating, StudySelectionChange } from '../shared/models';
 
 interface Methods {
   'library.list': { params: Record<string, never>; result: Library };
@@ -6,9 +6,9 @@ interface Methods {
   'deck.save': { params: { deckId?: number; name: string }; result: Deck };
   'card.save': { params: CardDraft & { cardId?: number }; result: Card };
   'card.remove': { params: { cardId: number }; result: null };
-  'card.setStudySelected': {
-    params: { cardId: number; selected: boolean };
-    result: Pick<Card, 'id' | 'studySelected'>;
+  'library.saveStudySelection': {
+    params: { changes: StudySelectionChange[] };
+    result: null;
   };
   'review.record': {
     params: { attemptId: string; cardId: number; answer: string; rating: ReviewRating };

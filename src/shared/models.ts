@@ -1,6 +1,8 @@
 export interface Deck {
   id: number;
   name: string;
+  parentId: number | null;
+  color: string | null;
 }
 
 export interface CardDraft {
@@ -19,6 +21,8 @@ export interface CardReviewUpdate {
 }
 
 export type Card = CardDraft & CardReviewUpdate & { studySelected: boolean };
+
+export type StudySelectionChange = Pick<Card, 'id' | 'studySelected'>;
 
 export interface Library {
   decks: Deck[];

@@ -7,6 +7,8 @@
 
 .sidebar-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 7px 10px; }
 .sidebar-heading h2 { font-size: 13px; color: var(--color-text-2); }
+.deck-nav-list { list-style: none; margin: 0; padding: 0; }
+.subdeck-list { margin-inline-start: 15px; padding-inline-start: 5px; border-inline-start: 1px solid var(--border-soft); }
 .deck-link {
   width: 100%;
   display: grid;
@@ -29,10 +31,13 @@
 .deck-link-current, .deck-link-current:hover:not(:disabled) { color: #0d4edb; background: #e8f1ff; font-weight: 600; }
 .deck-link-current small { color: inherit; }
 .deck-link:disabled { cursor: default; }
+.subdeck-link { grid-template-columns: 8px minmax(0, 1fr) auto; }
+.deck-color { width: 8px; height: 8px; border-radius: 50%; background: var(--color-text-3); }
 
 
 @media (max-width: 600px) {
   .sidebar { padding-inline: 6px; }
   .deck-link { grid-template-columns: minmax(0, 1fr) auto; }
   .deck-link svg { display: none; }
+  .subdeck-link { grid-template-columns: 8px minmax(0, 1fr) auto; }
 }

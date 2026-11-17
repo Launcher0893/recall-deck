@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, shallowRef } from 'vue';
-import { Alert as AAlert, Button as AButton, Empty as AEmpty, Tag as ATag } from '@arco-design/web-vue';
+import { computed, shallowRef } from 'vue';
+import { Button as AButton, Empty as AEmpty, Tag as ATag } from '@arco-design/web-vue';
 import { IconDelete, IconEdit, IconPlus } from '@arco-design/web-vue/es/icon';
-import { errorMessage } from '../../platform/tinyjs';
 import type { Card, Deck } from '../../shared/models';
 import MarkdownView from '../../shared/markdown/MarkdownView';
 import { ratings } from '../review/ratings';
@@ -10,30 +9,15 @@ import './library.css';
 
 const props = defineProps<{
   deck: Deck;
+  subdecks?: Deck[];
   cards: Card[];
-  setStudySelected: (cardId: number, selected: boolean) => Promise<void>;
+  canSelectStudy: boolean;
 }>();
-const emit = defineEmits<{ add: []; edit: [Card]; remove: [Card]; rename: [] }>();
+const emit = defineEmits<{ add: []; edit: [Card]; remove: [Card]; rename: []; selectStudy: [] }>();
 const revealed = shallowRef<ReadonlySet<number>>(new Set());
-const pending = reactive(new Set<number>());
-const selectionError = shallowRef('');
 const studyCount = computed(() => props.cards.filter((card) => card.studySelected).length);
+const subdeckById = computed(() => new Map(props.subdecks?.map((deck) => [deck.id, deck])));
 const dateFormat = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' });
-
-async function changeStudySelection(card: Card, event: Event) {
-  const input = event.target as HTMLInputElement;
-  const selected = input.checked;
-  pending.add(card.id);
-  selectionError.value = '';
-  try {
-    await props.setStudySelected(card.id, selected);
-  } catch (error) {
-    input.checked = card.studySelected;
-    selectionError.value = '无法保存学习勾选。' + errorMessage(error);
-  } finally {
-    pending.delete(card.id);
-  }
-}
 
 function toggle(cardId: number) {
   const next = new Set(revealed.value);
@@ -56,13 +40,13 @@ function toggle(cardId: number) {
         <p class="muted">{{ cards.length }} 张卡片 · {{ studyCount }} 张已加入学习</p>
       </div>
       <div class="heading-actions">
+        <AButton size="large" :disabled="!canSelectStudy" @click="emit('selectStudy')">选择学习卡片</AButton>
         <AButton size="large" type="primary" @click="emit('add')">
           <template #icon><IconPlus /></template>新建卡片
         </AButton>
       </div>
     </div>
 
-    <AAlert v-if="selectionError" type="error" role="alert">{{ selectionError }}</AAlert>
     <div v-if="!cards.length" class="panel empty-panel">
       <AEmpty description="这个卡组还没有卡片" />
       <AButton type="primary" @click="emit('add')">添加第一张卡片</AButton>
@@ -83,11 +67,9 @@ function toggle(cardId: number) {
           </div>
         </div>
         <div class="card-schedule" role="group" aria-label="复习状态">
-          <label class="study-checkbox">
-            <input type="checkbox" :checked="card.studySelected" :disabled="pending.has(card.id)"
-              @change="changeStudySelection(card, $event)" />
-            加入学习
-          </label>
+          <ATag v-if="subdeckById.has(card.deckId)" :color="subdeckById.get(card.deckId)?.color ?? undefined">
+            {{ subdeckById.get(card.deckId)?.name }}
+          </ATag>
           <ATag v-if="card.reviewState" :color="ratings[card.reviewState].color">{{ ratings[card.reviewState].label }}</ATag>
           <ATag v-else>未学习</ATag>
           <span v-if="card.studySelected && card.dueAt !== null" class="muted">

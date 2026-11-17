@@ -4,8 +4,8 @@ import { Alert as AAlert, Button as AButton, Tag as ATag } from '@arco-design/we
 import { IconArrowLeft, IconCheckCircle } from '@arco-design/web-vue/es/icon';
 import type { Card } from '../../shared/models';
 import MarkdownView from '../../shared/markdown/MarkdownView';
-import { submitsAnswer } from './review';
 import { ratings } from './ratings';
+import ReviewAnswerForm from './ReviewAnswerForm.vue';
 import { useReviewSession } from './useReviewSession';
 import './review.css';
 
@@ -16,24 +16,13 @@ const {
   current, missed, counts, answer, submitted, automatic, rating, error, saving,
   completed, total, gradeLocked, submit, revealAsForgotten, grade, advance, retryMissed,
 } = useReviewSession(props.cards);
-const textarea = useTemplateRef('answerBox');
 const feedback = useTemplateRef('feedback');
 const summary = useTemplateRef('summary');
-let composing = false;
 
 watchPostEffect(() => {
-  composing = false;
-  textarea.value?.focus();
   feedback.value?.focus();
   summary.value?.focus();
 });
-
-function keydown(event: KeyboardEvent) {
-  if (!submitsAnswer(event, composing)) return;
-  event.preventDefault();
-  submit();
-}
-
 </script>
 
 <template>
@@ -59,21 +48,7 @@ function keydown(event: KeyboardEvent) {
         <MarkdownView :source="current.front" />
       </section>
 
-      <form v-if="!submitted" class="panel answer-panel" @submit.prevent="submit">
-        <label for="review-answer">你的答案</label>
-        <textarea
-          id="review-answer" ref="answerBox" v-model="answer" rows="4" maxlength="40000"
-          placeholder="在这里输入答案" @keydown="keydown"
-          @compositionstart="composing = true" @compositionend="composing = false"
-        />
-        <div class="action-bar">
-          <span class="muted"><kbd>Enter</kbd> 提交 <span class="shortcut-gap"><kbd>Shift + Enter</kbd> 换行</span></span>
-          <div class="heading-actions">
-            <AButton @click="revealAsForgotten">想不起来</AButton>
-            <AButton type="primary" html-type="submit" :disabled="!answer.trim()">提交答案</AButton>
-          </div>
-        </div>
-      </form>
+      <ReviewAnswerForm v-if="!submitted" v-model="answer" @submit="submit" @forget="revealAsForgotten" />
 
       <section v-else class="panel feedback-panel">
         <h2 ref="feedback" tabindex="-1" class="focus-heading">对照答案</h2>

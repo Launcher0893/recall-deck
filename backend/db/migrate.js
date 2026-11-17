@@ -1,22 +1,38 @@
 import { rows } from './rows.js';
+import { groupLegacyOutlineCards } from './legacyOutline.js';
 import { nextSchedule } from '../features/schedule.js';
+
+const schemaVersion = 4;
 
 export function migrate(db) {
   db.transaction(() => {
     const [{ user_version: version }] = rows(db, 'PRAGMA user_version');
-    if (version === 3) return;
-    if (version !== 0 && version !== 1 && version !== 2) {
+    if (version === schemaVersion) return;
+    if (version < 0 || version > schemaVersion) {
       throw new Error('数据库版本高于当前应用支持的版本。');
     }
     if (version === 0) createInitialSchema(db);
     if (version < 2) addReviewSchedule(db);
-    db.exec(`
-      ALTER TABLE cards ADD COLUMN studySelected INTEGER NOT NULL DEFAULT 0 CHECK(studySelected IN (0, 1));
-      UPDATE cards SET studySelected = 1 WHERE dueAt IS NOT NULL;
-      ALTER TABLE reviews ADD COLUMN source TEXT NOT NULL DEFAULT 'test' CHECK(source IN ('study', 'test'));
-      PRAGMA user_version = 3;
-    `);
+    if (version < 3) addStudySelection(db);
+    addDeckGrouping(db);
+    groupLegacyOutlineCards(db);
+    db.exec('PRAGMA user_version = ' + schemaVersion);
   }).immediate();
+}
+
+function addStudySelection(db) {
+  db.exec(`
+    ALTER TABLE cards ADD COLUMN studySelected INTEGER NOT NULL DEFAULT 0 CHECK(studySelected IN (0, 1));
+    UPDATE cards SET studySelected = 1 WHERE dueAt IS NOT NULL;
+    ALTER TABLE reviews ADD COLUMN source TEXT NOT NULL DEFAULT 'test' CHECK(source IN ('study', 'test'));
+  `);
+}
+
+function addDeckGrouping(db) {
+  db.exec(`
+    ALTER TABLE decks ADD COLUMN parentId INTEGER REFERENCES decks(id);
+    ALTER TABLE decks ADD COLUMN color TEXT;
+  `);
 }
 
 function createInitialSchema(db) {
@@ -42,7 +58,6 @@ function createInitialSchema(db) {
       );
       CREATE INDEX reviews_card ON reviews(cardId);
       INSERT INTO decks (name) VALUES ('默认卡组');
-      PRAGMA user_version = 1;
     `);
 }
 
@@ -78,5 +93,4 @@ function addReviewSchedule(db) {
     rows(db, 'UPDATE cards SET reviewState = ?, reviewStep = ?, dueAt = ? WHERE id = ?',
       reviewState, reviewStep, dueAt, cardId);
   }
-  db.exec('PRAGMA user_version = 2');
 }

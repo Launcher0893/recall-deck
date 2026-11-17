@@ -3,7 +3,7 @@ import type { Card, Deck } from '../../shared/models';
 
 export type LibraryDialog =
   | { type: 'deck'; deck: Deck | null }
-  | { type: 'card'; card: Card | null; deckId: number }
+  | { type: 'card'; card: Card | null; deckId: number; options: Deck[] }
   | { type: 'delete'; card: Card };
 </script>
 
@@ -66,7 +66,7 @@ function removeCard() {
 </script>
 
 <template>
-  <CardEditor v-if="dialog.type === 'card'" :card="dialog.card" :deck-id="dialog.deckId"
+  <CardEditor v-if="dialog.type === 'card'" :card="dialog.card" :deck-id="dialog.deckId" :options="dialog.options"
     :busy="busy" :error="error" @save="saveCard" @close="close" />
   <AModal v-else-if="dialog.type === 'deck'" :visible="true" :title="dialog.deck ? '重命名卡组' : '新建卡组'"
     :footer="false" :mask-closable="false" :closable="!busy" :esc-to-close="!busy" @cancel="close">

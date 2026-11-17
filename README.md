@@ -19,7 +19,7 @@ tinyjs dev
 
 卡片正反面支持 Markdown、`$…$` 行内公式和用独立行 `$$` 包围的块公式。可添加一条用于自动比对的文本答案。
 
-在「卡组管理」编辑卡片，勾选「加入学习」。进入「学习与复习」就会显示一张已勾选的到期卡或新卡。点击卡片任意位置切换正反面，在底部选择「认识」「模糊」或「忘记」。应用保存熟悉度和下次复习时间后会显示下一张。
+在「卡组管理」点击「选择学习卡片」，勾选卡片并保存。进入「学习与复习」就会显示一张已勾选的到期卡或新卡。点击卡片任意位置切换正反面，在底部选择「认识」「模糊」或「忘记」。应用保存熟悉度和下次复习时间后会显示下一张。
 
 「键盘自测」可以用已勾选的卡片检验记忆。用 `Enter` 提交，`Shift + Enter` 换行。自测结果单独记录，学习日程由翻面学习的判分更新。
 
@@ -54,6 +54,6 @@ tinyjs build
 | `src/features/study/` | 逐张学习、翻面和日程更新 |
 | `src/shared/`、`src/platform/` | 共享的数据类型和 Markdown 渲染，以及有类型约束的 tinyjs 调用 |
 | `backend/features/`、`backend/db/` | 处理桌面接口请求，管理 SQLite 连接和迁移 |
-| `test/` | 判分和键盘交互的单元测试 |
+| `test/` | 数据库迁移、作答保存、复习调度和键盘交互测试 |
 
-添加桌面接口时，在对应的后台功能模块实现，再通过 `backend/main.js` 注册，并在 `src/platform/tinyjs.ts` 声明请求和响应类型。数据库结构变更集中在 `backend/db/migrate.js`，通过 SQLite 的 `user_version` 按版本升级。
+添加桌面接口时，在对应的后台功能模块实现，再通过 `backend/main.js` 注册，并在 `src/platform/tinyjs.ts` 声明请求和响应类型。数据库结构变更集中在 `backend/db/migrate.js`，通过 SQLite 的 `user_version` 按版本升级。`backend/db/legacyOutline.js` 在升级时识别并整理旧版导入的党课卡组。
