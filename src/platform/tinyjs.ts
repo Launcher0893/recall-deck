@@ -1,8 +1,11 @@
-import type { Card, CardDraft, CardReviewUpdate, Deck, Library, ReviewRating, StudySelectionChange } from '../shared/models';
+import type {
+  Card, CardDraft, CardReviewUpdate, Deck, Library, ReviewRating, Statistics, StudyAttempt, StudySelectionChange,
+} from '../shared/models';
 
 interface Methods {
   'library.list': { params: Record<string, never>; result: Library };
   'library.addExamples': { params: Record<string, never>; result: Library };
+  'statistics.summary': { params: Record<string, never>; result: Statistics };
   'deck.save': { params: { deckId?: number; name: string }; result: Deck };
   'card.save': { params: CardDraft & { cardId?: number }; result: Card };
   'card.remove': { params: { cardId: number }; result: null };
@@ -15,7 +18,11 @@ interface Methods {
     result: null;
   };
   'study.record': {
-    params: { attemptId: string; cardId: number; rating: ReviewRating };
+    params: StudyAttempt;
+    result: CardReviewUpdate;
+  };
+  'study.revise': {
+    params: StudyAttempt & { expectedRating: ReviewRating };
     result: CardReviewUpdate;
   };
 }

@@ -9,7 +9,7 @@ import ReviewAnswerForm from './ReviewAnswerForm.vue';
 import { useReviewSession } from './useReviewSession';
 import './review.css';
 
-const props = defineProps<{ cards: Card[] }>();
+const props = defineProps<{ cards: Card[]; returnLabel: string }>();
 const emit = defineEmits<{ close: [] }>();
 
 const {
@@ -33,7 +33,7 @@ watchPostEffect(() => {
         <p class="muted">检验记忆，学习安排由翻面复习的判分更新。</p>
       </div>
       <AButton :disabled="saving" @click="emit('close')">
-        <template #icon><IconArrowLeft /></template>返回学习与复习
+        <template #icon><IconArrowLeft /></template>{{ returnLabel }}
       </AButton>
     </div>
 

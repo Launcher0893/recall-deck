@@ -38,11 +38,12 @@ test('an early retest cannot advance or delay a scheduled recognition', () => {
   assert.deepEqual(nextSchedule(card, 'fuzzy', now), { ...card, reviewState: 'fuzzy' });
 });
 
-test('due cards are reviewed first, followed by new cards in creation order', () => {
+test('new and due cards go to separate queues and future cards wait', () => {
   const cards = [
     { id: 3, dueAt: null }, { id: 4, dueAt: 200 }, { id: 2, dueAt: 100 },
     { id: 1, dueAt: null }, { id: 5, dueAt: 300 },
   ];
-  assert.deepEqual(reviewQueue(cards, 200).map((card) => card.id), [2, 4, 1, 3]);
+  assert.deepEqual(reviewQueue(cards, 200, 'learn').map((card) => card.id), [1, 3]);
+  assert.deepEqual(reviewQueue(cards, 200, 'review').map((card) => card.id), [2, 4]);
   assert.equal(cards[0].id, 3);
 });

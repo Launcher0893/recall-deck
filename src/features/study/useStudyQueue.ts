@@ -1,14 +1,12 @@
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue';
-import type { Card } from '../../shared/models';
+import type { Card, StudyMode } from '../../shared/models';
 import { reviewQueue } from '../review/reviewQueue';
 
-export function useStudyQueue(cards: () => readonly Card[]) {
+export function useStudyQueue(cards: () => readonly Card[], mode: StudyMode) {
   const now = shallowRef(Date.now());
   const currentId = shallowRef<number>();
-  const queue = computed(() => reviewQueue(cards(), now.value));
+  const queue = computed(() => reviewQueue(cards(), now.value, mode));
   const current = computed(() => queue.value.find((card) => card.id === currentId.value));
-  const newCount = computed(() => queue.value.filter((card) => card.dueAt === null).length);
-  const dueCount = computed(() => queue.value.length - newCount.value);
   const nextDue = computed(() => cards().reduce<number | null>((earliest, card) => {
     if (card.dueAt === null || card.dueAt <= now.value) return earliest;
     return earliest === null ? card.dueAt : Math.min(earliest, card.dueAt);
@@ -32,5 +30,5 @@ export function useStudyQueue(cards: () => readonly Card[]) {
     window.removeEventListener('focus', refresh);
   });
 
-  return { current, newCount, dueCount, nextDue, refresh };
+  return { current, remaining: computed(() => queue.value.length), nextDue, refresh };
 }

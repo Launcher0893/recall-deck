@@ -1,8 +1,9 @@
 import { rows } from './rows.js';
 import { groupLegacyOutlineCards } from './legacyOutline.js';
+import { addStudyHistory } from './studyHistory.js';
 import { nextSchedule } from '../features/schedule.js';
 
-const schemaVersion = 4;
+const schemaVersion = 6;
 
 export function migrate(db) {
   db.transaction(() => {
@@ -14,8 +15,19 @@ export function migrate(db) {
     if (version === 0) createInitialSchema(db);
     if (version < 2) addReviewSchedule(db);
     if (version < 3) addStudySelection(db);
-    addDeckGrouping(db);
-    groupLegacyOutlineCards(db);
+    if (version < 4) {
+      addDeckGrouping(db);
+      groupLegacyOutlineCards(db);
+    }
+    if (version < 5) addStudyHistory(db);
+    db.exec(`
+      CREATE TABLE study_attempt_details (
+        attemptId TEXT PRIMARY KEY NOT NULL REFERENCES reviews(attemptId) ON DELETE CASCADE,
+        eventId INTEGER NOT NULL REFERENCES study_events(id),
+        previousReviewStep INTEGER NOT NULL,
+        previousDueAt INTEGER
+      );
+    `);
     db.exec('PRAGMA user_version = ' + schemaVersion);
   }).immediate();
 }

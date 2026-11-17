@@ -80,7 +80,7 @@ test('fresh databases retain their default deck and can be opened again', (t) =>
   const db = database(t, 0);
   migrate(db);
   migrate(db);
-  assert.deepEqual(rows(db, 'PRAGMA user_version'), [{ user_version: 4 }]);
+  assert.deepEqual(rows(db, 'PRAGMA user_version'), [{ user_version: 6 }]);
   assert.deepEqual(rows(db, 'SELECT name, parentId, color FROM decks'), [
     { name: '默认卡组', parentId: null, color: null },
   ]);
