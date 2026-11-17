@@ -10,9 +10,15 @@ export interface CardDraft {
   expected: string;
 }
 
-export interface Card extends CardDraft {
+export type ReviewRating = 'known' | 'fuzzy' | 'forgotten';
+
+export interface CardReviewUpdate {
   id: number;
+  reviewState: ReviewRating | null;
+  dueAt: number | null;
 }
+
+export type Card = CardDraft & CardReviewUpdate & { studySelected: boolean };
 
 export interface Library {
   decks: Deck[];

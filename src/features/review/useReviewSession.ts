@@ -1,17 +1,22 @@
 import { computed, shallowRef } from 'vue';
 import { call, errorMessage } from '../../platform/tinyjs';
-import type { Card } from '../../shared/models';
+import type { Card, ReviewRating } from '../../shared/models';
 import { gradeAnswer } from './review';
 
 export function useReviewSession(cards: Card[]) {
   const queue = shallowRef(cards.slice());
-  const results = shallowRef<{ card: Card; remembered: boolean }[]>([]);
+  const results = shallowRef<{ card: Card; rating: ReviewRating }[]>([]);
   const current = computed<Card | undefined>(() => queue.value[results.value.length]);
-  const missed = computed(() => results.value.filter((result) => !result.remembered).map((result) => result.card));
+  const missed = computed(() => results.value.filter((result) => result.rating !== 'known').map((result) => result.card));
+  const counts = computed(() => {
+    const result = { known: 0, fuzzy: 0, forgotten: 0 };
+    for (const { rating } of results.value) result[rating] += 1;
+    return result;
+  });
   const answer = shallowRef('');
   const submitted = shallowRef(false);
   const automatic = shallowRef<boolean | null>(null);
-  const remembered = shallowRef<boolean | null>(null);
+  const rating = shallowRef<ReviewRating | null>(null);
   const attemptId = shallowRef('');
   const error = shallowRef('');
   const saving = shallowRef(false);
@@ -19,33 +24,39 @@ export function useReviewSession(cards: Card[]) {
   function submit() {
     if (!current.value || submitted.value || !answer.value.trim()) return;
     automatic.value = gradeAnswer(answer.value, current.value.expected);
-    remembered.value = automatic.value;
+    rating.value = automatic.value === true ? 'known' : null;
     submitted.value = true;
   }
 
-  function grade(verdict: boolean) {
-    if (submitted.value && !attemptId.value) remembered.value = verdict;
+  function revealAsForgotten() {
+    if (!current.value || submitted.value) return;
+    rating.value = 'forgotten';
+    submitted.value = true;
+  }
+
+  function grade(verdict: ReviewRating) {
+    if (submitted.value && !attemptId.value) rating.value = verdict;
   }
 
   function resetAnswer() {
     answer.value = '';
     submitted.value = false;
     automatic.value = null;
-    remembered.value = null;
+    rating.value = null;
     attemptId.value = '';
     error.value = '';
   }
 
   async function advance() {
-    if (saving.value || remembered.value === null || !current.value) return;
+    if (saving.value || rating.value === null || !current.value) return;
     const card = current.value;
-    const verdict = remembered.value;
+    const verdict = rating.value;
     attemptId.value ||= crypto.randomUUID();
     error.value = '';
     saving.value = true;
     try {
-      await call('review.record', { attemptId: attemptId.value, cardId: card.id, answer: answer.value, remembered: verdict });
-      results.value = [...results.value, { card, remembered: verdict }];
+      await call('review.record', { attemptId: attemptId.value, cardId: card.id, answer: answer.value, rating: verdict });
+      results.value = [...results.value, { card, rating: verdict }];
       resetAnswer();
     } catch (reason) {
       error.value = '未能保存作答。' + errorMessage(reason);
@@ -61,10 +72,10 @@ export function useReviewSession(cards: Card[]) {
   }
 
   return {
-    current, missed, answer, submitted, automatic, remembered, error, saving,
+    current, missed, counts, answer, submitted, automatic, rating, error, saving,
     completed: computed(() => results.value.length),
     total: computed(() => queue.value.length),
     gradeLocked: computed(() => !!attemptId.value),
-    submit, grade, advance, retryMissed,
+    submit, revealAsForgotten, grade, advance, retryMissed,
   };
 }

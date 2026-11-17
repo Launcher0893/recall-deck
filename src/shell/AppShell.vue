@@ -10,7 +10,7 @@ import './shell.css';
       <span class="brand-name">Recall Deck</span>
       <span class="brand-caption">记忆卡</span>
     </header>
-    <slot name="sidebar" />
+    <aside class="sidebar"><slot name="sidebar" /></aside>
     <main class="workspace">
       <div class="workspace-content"><slot /></div>
     </main>

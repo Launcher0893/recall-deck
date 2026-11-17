@@ -1,6 +1,6 @@
 import { computed, shallowRef } from 'vue';
 import { call, errorMessage } from '../../platform/tinyjs';
-import type { Card, CardDraft, Deck } from '../../shared/models';
+import type { Card, CardDraft, CardReviewUpdate, Deck } from '../../shared/models';
 
 export function useLibrary() {
   const decks = shallowRef<Deck[]>([]);
@@ -10,6 +10,7 @@ export function useLibrary() {
   const loadError = shallowRef('');
   const selectedDeck = computed(() => decks.value.find((deck) => deck.id === selectedId.value));
   const selectedCards = computed(() => cards.value.filter((card) => card.deckId === selectedId.value));
+  const studyCards = computed(() => cards.value.filter((card) => card.studySelected));
   const counts = computed(() => {
     const result = new Map<number, number>();
     for (const card of cards.value) result.set(card.deckId, (result.get(card.deckId) ?? 0) + 1);
@@ -48,5 +49,16 @@ export function useLibrary() {
     cards.value = cards.value.filter((card) => card.id !== cardId);
   }
 
-  return { decks, selectedId, selectedDeck, selectedCards, counts, loading, loadError, load, saveDeck, saveCard, removeCard };
+  function updateCardStudy(update: CardReviewUpdate | Pick<Card, 'id' | 'studySelected'>) {
+    cards.value = cards.value.map((card) => card.id === update.id ? { ...card, ...update } : card);
+  }
+
+  async function setStudySelected(cardId: number, selected: boolean) {
+    updateCardStudy(await call('card.setStudySelected', { cardId, selected }));
+  }
+
+  return {
+    decks, selectedId, selectedDeck, selectedCards, studyCards, counts, loading, loadError,
+    load, saveDeck, saveCard, removeCard, updateCardStudy, setStudySelected,
+  };
 }

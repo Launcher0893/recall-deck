@@ -7,12 +7,18 @@ function existing(result, message) {
   return result[0];
 }
 
+const cardFields = 'id, deckId, front, back, expected, reviewState, dueAt, studySelected';
+
+function toCard(row) {
+  return { ...row, studySelected: row.studySelected === 1 };
+}
+
 export const libraryApi = {
   async 'library.list'(_params, app) {
     const db = await getDatabase(app);
     return {
       decks: rows(db, 'SELECT id, name FROM decks ORDER BY id'),
-      cards: rows(db, 'SELECT id, deckId, front, back, expected FROM cards ORDER BY id'),
+      cards: rows(db, 'SELECT ' + cardFields + ' FROM cards ORDER BY id').map(toCard),
     };
   },
 
@@ -34,15 +40,24 @@ export const libraryApi = {
       content(expected, '比对答案', 4_000, false).trim(),
     ];
     if (cardId === undefined) {
-      return rows(db, `
+      return toCard(rows(db, `
         INSERT INTO cards (deckId, front, back, expected) VALUES (?, ?, ?, ?)
-        RETURNING id, deckId, front, back, expected
-      `, ...fields)[0];
+        RETURNING ${cardFields}
+      `, ...fields)[0]);
     }
-    return existing(rows(db, `
+    return toCard(existing(rows(db, `
       UPDATE cards SET deckId = ?, front = ?, back = ?, expected = ? WHERE id = ?
-      RETURNING id, deckId, front, back, expected
-    `, ...fields, id(cardId)), '卡片已不存在。');
+      RETURNING ${cardFields}
+    `, ...fields, id(cardId)), '卡片已不存在。'));
+  },
+
+  async 'card.setStudySelected'({ cardId, selected }, app) {
+    if (typeof selected !== 'boolean') throw new Error('请选择是否加入学习。');
+    const db = await getDatabase(app);
+    const saved = existing(rows(db, `
+      UPDATE cards SET studySelected = ? WHERE id = ? RETURNING id, studySelected
+    `, Number(selected), id(cardId)), '卡片已不存在。');
+    return { id: saved.id, studySelected: saved.studySelected === 1 };
   },
 
   async 'card.remove'({ cardId }, app) {
