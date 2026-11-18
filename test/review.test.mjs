@@ -29,7 +29,7 @@ test('replaying a study attempt does not record it twice or advance the schedule
   const db = createTestDatabase();
   t.after(() => db.close());
   migrate(db);
-  db.exec("INSERT INTO cards (deckId, front, back, expected) VALUES (1, 'Question', 'Answer', '')");
+  db.exec("INSERT INTO cards (deckId, front, back, expected, studySelected) VALUES (1, 'Question', 'Answer', '', 1)");
   const attempt = { attemptId: '4a642c92-e987-4493-b6d1-1aa31e9f8502', cardId: 1, answer: '', rating: 'known' };
   const dueAt = 1000 + 20 * 60_000;
   const expected = { id: 1, reviewState: 'known', dueAt };
@@ -38,6 +38,13 @@ test('replaying a study attempt does not record it twice or advance the schedule
   assert.deepEqual(saveAttempt(db, attempt, 'study', dueAt), expected);
   assert.equal(rows(db, 'SELECT count(*) AS count FROM reviews')[0].count, 1);
   assert.equal(rows(db, 'SELECT reviewStep FROM cards WHERE id = 1')[0].reviewStep, 1);
+
+  db.exec('UPDATE cards SET studySelected = 0 WHERE id = 1');
+  assert.deepEqual(saveAttempt(db, attempt, 'study', dueAt), expected);
+  const nextAttempt = { ...attempt, attemptId: '598d6f3a-bf71-4706-9501-dac2a31d4738', rating: 'forgotten' };
+  assert.throws(() => saveAttempt(db, nextAttempt, 'study', dueAt), /已移出学习队列/);
+  assert.equal(rows(db, 'SELECT count(*) AS count FROM reviews')[0].count, 1);
+  assert.equal(rows(db, 'SELECT dueAt FROM cards WHERE id = 1')[0].dueAt, dueAt);
 });
 
 test('a reused attempt ID must match the card, answer, rating and source', (t) => {

@@ -12,13 +12,14 @@ import { useStudySelection } from './useStudySelection';
 const props = defineProps<{
   cards: Card[];
   decks: Deck[];
+  initialDeckId?: number;
   saveSelection: (changes: StudySelectionChange[]) => Promise<void>;
 }>();
 const emit = defineEmits<{ close: [] }>();
 
 const {
   query, deckId, deckById, deckOptions, visibleCards, selectedIds, visibleSelectedCount, changes, setSelected,
-} = useStudySelection(() => props.cards, () => props.decks);
+} = useStudySelection(() => props.cards, () => props.decks, props.initialDeckId);
 const busy = shallowRef(false);
 const error = shallowRef('');
 
@@ -51,7 +52,7 @@ async function save() {
     <div class="selection-controls">
       <AInput v-model="query" allow-clear placeholder="搜索卡片正面"
         :input-attrs="{ 'aria-label': '搜索卡片正面' }" :disabled="busy" />
-      <ASelect v-if="deckOptions.length > 1" v-model="deckId" :options="deckOptions" allow-clear
+      <ASelect v-if="deckOptions.length > 1 || deckId !== undefined" v-model="deckId" :options="deckOptions" allow-clear
         placeholder="全部卡组" aria-label="按卡组筛选" :disabled="busy" />
     </div>
     <div class="selection-toolbar">

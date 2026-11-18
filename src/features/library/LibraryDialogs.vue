@@ -18,7 +18,7 @@ import './editor.css';
 const props = defineProps<{
   dialog: LibraryDialog;
   saveDeck: (name: string, deckId?: number) => Promise<void>;
-  saveCard: (draft: CardDraft, cardId?: number) => Promise<void>;
+  saveCard: (draft: CardDraft, cardId?: number, joinStudy?: boolean) => Promise<void>;
   removeCard: (cardId: number) => Promise<void>;
 }>();
 const emit = defineEmits<{ close: [] }>();
@@ -52,10 +52,10 @@ function saveDeck() {
   return persist(() => props.saveDeck(name, dialog.deck?.id));
 }
 
-function saveCard(draft: CardDraft) {
+function saveCard(draft: CardDraft, joinStudy: boolean) {
   const { dialog } = props;
   if (dialog.type !== 'card') return;
-  return persist(() => props.saveCard(draft, dialog.card?.id));
+  return persist(() => props.saveCard(draft, dialog.card?.id, joinStudy));
 }
 
 function removeCard() {

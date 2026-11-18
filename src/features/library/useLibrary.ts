@@ -54,9 +54,9 @@ export function useLibrary() {
     });
   }
 
-  function saveCard(draft: CardDraft, cardId?: number) {
+  function saveCard(draft: CardDraft, cardId?: number, joinStudy = false) {
     return runInOrder(async () => {
-      const saved = await call('card.save', { ...draft, cardId });
+      const saved = await call('card.save', { ...draft, cardId, joinStudy });
       if (cardId === undefined) {
         cards.value = [...cards.value, saved];
         return;

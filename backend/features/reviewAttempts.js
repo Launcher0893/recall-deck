@@ -22,7 +22,7 @@ export function saveAttempt(db, { attemptId, cardId, answer, rating }, source, n
   const text = content(answer, '作答', 40_000, false);
 
   return db.transaction(() => {
-    const [card] = rows(db, 'SELECT reviewState, reviewStep, dueAt FROM cards WHERE id = ?', key);
+    const [card] = rows(db, 'SELECT reviewState, reviewStep, dueAt, studySelected FROM cards WHERE id = ?', key);
     if (!card) throw new Error('卡片已不存在。');
     const added = rows(db, `
       INSERT INTO reviews (attemptId, cardId, answer, rating, reviewedAt, source)
@@ -38,6 +38,7 @@ export function saveAttempt(db, { attemptId, cardId, answer, rating }, source, n
 
     if (source === 'test') return null;
     if (!added.length) return { id: key, reviewState: card.reviewState, dueAt: card.dueAt };
+    if (card.studySelected !== 1) throw new Error('这张卡片已移出学习队列，请重新打开学习页面。');
 
     const [event] = rows(db, 'INSERT INTO study_events (cardId, occurredAt, rating) VALUES (?, ?, ?) RETURNING id',
       key, now, rating);

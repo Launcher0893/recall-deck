@@ -5,9 +5,11 @@ import type {
 interface Methods {
   'library.list': { params: Record<string, never>; result: Library };
   'library.addExamples': { params: Record<string, never>; result: Library };
+  'backup.export': { params: Record<string, never>; result: { path: string } | null };
+  'backup.restore': { params: Record<string, never>; result: { path: string } | null };
   'statistics.summary': { params: Record<string, never>; result: Statistics };
   'deck.save': { params: { deckId?: number; name: string }; result: Deck };
-  'card.save': { params: CardDraft & { cardId?: number }; result: Card };
+  'card.save': { params: CardDraft & { cardId?: number; joinStudy?: boolean }; result: Card };
   'card.remove': { params: { cardId: number }; result: null };
   'library.saveStudySelection': {
     params: { changes: StudySelectionChange[] };

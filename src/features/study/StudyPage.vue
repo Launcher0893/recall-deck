@@ -2,8 +2,7 @@
 import { computed, shallowRef } from 'vue';
 import { Alert as AAlert, Button as AButton, Empty as AEmpty, Tag as ATag } from '@arco-design/web-vue';
 import { errorMessage } from '../../platform/tinyjs';
-import type { Card, CardReviewUpdate, Deck, StudyAttempt, StudyMode } from '../../shared/models';
-import ReviewSession from '../review/ReviewSession.vue';
+import type { Card, Deck, ReviewRating, StudyAttempt, StudyMode } from '../../shared/models';
 import { ratings } from '../review/ratings';
 import StudyCard from './StudyCard.vue';
 import { useStudyQueue } from './useStudyQueue';
@@ -13,17 +12,19 @@ const props = defineProps<{
   cards: Card[];
   decks: Deck[];
   mode: StudyMode;
+  scopeName?: string;
+  hasPendingTest: boolean;
+  saving: boolean;
   previousAttempt?: StudyAttempt;
   hasCards: boolean;
   addExamples: () => Promise<void>;
-  applyReview: (mode: StudyMode, update: CardReviewUpdate, attempt: StudyAttempt) => void;
+  saveReview: (mode: StudyMode, attempt: StudyAttempt, expectedRating?: ReviewRating) => Promise<void>;
 }>();
-const emit = defineEmits<{ manage: [] }>();
-const testCards = shallowRef<Card[]>();
+const emit = defineEmits<{ manage: []; test: []; clearScope: [] }>();
 const addingExamples = shallowRef(false);
 const exampleError = shallowRef('');
 const revising = shallowRef(false);
-const { current, remaining, nextDue, refresh } = useStudyQueue(() => props.cards, props.mode);
+const { current, remaining, nextDue } = useStudyQueue(() => props.cards, props.mode);
 const title = computed(() => props.mode === 'learn' ? '学习' : '复习');
 const previousCard = computed(() => props.cards.find((card) => card.id === props.previousAttempt?.cardId));
 const displayedCard = computed(() => revising.value ? previousCard.value : current.value);
@@ -31,18 +32,9 @@ const revision = computed(() => revising.value ? props.previousAttempt : undefin
 const deckNames = computed(() => new Map(props.decks.map((deck) => [deck.id, deck.name])));
 const dateFormat = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' });
 
-function applyRating(update: CardReviewUpdate, attempt: StudyAttempt) {
-  props.applyReview(props.mode, update, attempt);
+async function saveRating(attempt: StudyAttempt, expectedRating?: ReviewRating) {
+  await props.saveReview(props.mode, attempt, expectedRating);
   revising.value = false;
-}
-
-function startTest() {
-  if (props.cards.length) testCards.value = props.cards.slice();
-}
-
-function closeTest() {
-  refresh();
-  testCards.value = undefined;
 }
 
 async function addExamples() {
@@ -60,18 +52,22 @@ async function addExamples() {
 </script>
 
 <template>
-  <ReviewSession v-if="testCards" :cards="testCards" :return-label="'返回' + title" @close="closeTest" />
-  <section v-else class="study-page" aria-labelledby="study-heading">
+  <section class="study-page" aria-labelledby="study-heading">
     <div class="page-heading">
       <div>
         <h1 id="study-heading">{{ title }}</h1>
-        <p class="muted">{{ remaining }} 张{{ mode === 'learn' ? '待学习' : '已到期' }}</p>
+        <p class="muted">{{ scopeName ? scopeName + ' · ' : '' }}{{ remaining }} 张{{ mode === 'learn' ? '待学习' : '已到期' }}</p>
       </div>
-      <AButton size="large" :disabled="!cards.length" @click="startTest">键盘自测</AButton>
+      <div class="heading-actions">
+        <AButton v-if="scopeName" :disabled="saving" @click="emit('clearScope')">全部卡组</AButton>
+        <AButton :disabled="saving || (!cards.length && !hasPendingTest)" @click="emit('test')">
+          {{ hasPendingTest ? '继续自测' : '键盘自测' }}
+        </AButton>
+      </div>
     </div>
     <StudyCard v-if="displayedCard" :key="displayedCard.id + (revision ? ':revision' : ':current')"
       :card="displayedCard" :revision="revision" :can-go-back="!!previousCard"
-      :apply-review="applyRating" @previous="revising = true" @cancel-revision="revising = false">
+      :save-review="saveRating" @previous="revising = true" @cancel-revision="revising = false">
       <div class="study-card-meta">
         <ATag v-if="revision" :color="ratings[revision.rating].color">上一次判分 · {{ ratings[revision.rating].label }}</ATag>
         <ATag v-else :color="mode === 'learn' ? 'blue' : 'orange'">{{ mode === 'learn' ? '新卡' : '到期' }}</ATag>

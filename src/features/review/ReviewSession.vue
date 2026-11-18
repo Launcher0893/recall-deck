@@ -2,20 +2,19 @@
 import { useTemplateRef, watchPostEffect } from 'vue';
 import { Alert as AAlert, Button as AButton, Tag as ATag } from '@arco-design/web-vue';
 import { IconArrowLeft, IconCheckCircle } from '@arco-design/web-vue/es/icon';
-import type { Card } from '../../shared/models';
 import MarkdownView from '../../shared/markdown/MarkdownView';
 import { ratings } from './ratings';
 import ReviewAnswerForm from './ReviewAnswerForm.vue';
-import { useReviewSession } from './useReviewSession';
+import type { useReviewSession } from './useReviewSession';
 import './review.css';
 
-const props = defineProps<{ cards: Card[]; returnLabel: string }>();
-const emit = defineEmits<{ close: [] }>();
+const props = defineProps<{ session: ReturnType<typeof useReviewSession>; scopeName?: string }>();
+const emit = defineEmits<{ pause: []; finish: [] }>();
 
 const {
   current, missed, counts, answer, submitted, automatic, rating, error, saving,
   completed, total, gradeLocked, submit, revealAsForgotten, grade, advance, retryMissed,
-} = useReviewSession(props.cards);
+} = props.session;
 const feedback = useTemplateRef('feedback');
 const summary = useTemplateRef('summary');
 
@@ -30,11 +29,15 @@ watchPostEffect(() => {
     <div class="page-heading">
       <div>
         <h1 id="review-heading">键盘自测</h1>
+        <p v-if="scopeName" class="muted">{{ scopeName }}</p>
         <p class="muted">检验记忆，学习安排由翻面复习的判分更新。</p>
       </div>
-      <AButton :disabled="saving" @click="emit('close')">
-        <template #icon><IconArrowLeft /></template>{{ returnLabel }}
-      </AButton>
+      <div class="heading-actions">
+        <AButton :disabled="saving" @click="emit('pause')">
+          <template #icon><IconArrowLeft /></template>返回
+        </AButton>
+        <AButton :disabled="saving" @click="emit('finish')">结束本轮</AButton>
+      </div>
     </div>
 
     <template v-if="current">

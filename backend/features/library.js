@@ -56,7 +56,7 @@ export const libraryApi = {
         '卡组已不存在。');
   },
 
-  async 'card.save'({ cardId, deckId, front, back, expected }, app) {
+  async 'card.save'({ cardId, deckId, front, back, expected, joinStudy = false }, app) {
     const db = await getDatabase(app);
     const fields = [
       id(deckId),
@@ -65,10 +65,11 @@ export const libraryApi = {
       content(expected, '比对答案', 4_000, false).trim(),
     ];
     if (cardId === undefined) {
+      if (typeof joinStudy !== 'boolean') throw new Error('学习选择无效。');
       return toCard(rows(db, `
-        INSERT INTO cards (deckId, front, back, expected) VALUES (?, ?, ?, ?)
+        INSERT INTO cards (deckId, front, back, expected, studySelected) VALUES (?, ?, ?, ?, ?)
         RETURNING ${cardFields}
-      `, ...fields)[0]);
+      `, ...fields, Number(joinStudy))[0]);
     }
     return toCard(existing(rows(db, `
       UPDATE cards SET deckId = ?, front = ?, back = ?, expected = ? WHERE id = ?

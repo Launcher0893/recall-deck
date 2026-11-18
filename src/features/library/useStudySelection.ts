@@ -1,9 +1,9 @@
 import { computed, shallowRef } from 'vue';
 import type { Card, Deck, StudySelectionChange } from '../../shared/models';
 
-export function useStudySelection(getCards: () => Card[], getDecks: () => Deck[]) {
+export function useStudySelection(getCards: () => Card[], getDecks: () => Deck[], initialDeckId?: number) {
   const query = shallowRef('');
-  const deckId = shallowRef<number>();
+  const deckId = shallowRef(initialDeckId);
   const draft = shallowRef(new Map<number, boolean>());
   const deckById = computed(() => new Map(getDecks().map((deck) => [deck.id, deck])));
 

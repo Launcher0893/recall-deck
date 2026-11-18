@@ -2,7 +2,7 @@
 import { computed, shallowRef } from 'vue';
 import { Button as AButton, Empty as AEmpty, Tag as ATag } from '@arco-design/web-vue';
 import { IconDelete, IconEdit, IconPlus } from '@arco-design/web-vue/es/icon';
-import type { Card, Deck } from '../../shared/models';
+import type { Card, Deck, StudyMode } from '../../shared/models';
 import MarkdownView from '../../shared/markdown/MarkdownView';
 import { ratings } from '../review/ratings';
 import './library.css';
@@ -13,7 +13,9 @@ const props = defineProps<{
   cards: Card[];
   canSelectStudy: boolean;
 }>();
-const emit = defineEmits<{ add: []; edit: [Card]; remove: [Card]; rename: []; selectStudy: [] }>();
+const emit = defineEmits<{
+  add: []; edit: [Card]; remove: [Card]; rename: []; selectStudy: []; study: [StudyMode]; test: [];
+}>();
 const revealed = shallowRef<ReadonlySet<number>>(new Set());
 const studyCount = computed(() => props.cards.filter((card) => card.studySelected).length);
 const subdeckById = computed(() => new Map(props.subdecks?.map((deck) => [deck.id, deck])));
@@ -45,6 +47,12 @@ function toggle(cardId: number) {
           <template #icon><IconPlus /></template>新建卡片
         </AButton>
       </div>
+    </div>
+
+    <div v-if="cards.length" class="heading-actions deck-study-actions" aria-label="按卡组开始">
+      <AButton :disabled="!studyCount" @click="emit('study', 'learn')">学习本组</AButton>
+      <AButton :disabled="!studyCount" @click="emit('study', 'review')">复习本组</AButton>
+      <AButton :disabled="!studyCount" @click="emit('test')">自测本组</AButton>
     </div>
 
     <div v-if="!cards.length" class="panel empty-panel">
@@ -88,3 +96,7 @@ function toggle(cardId: number) {
     </ul>
   </section>
 </template>
+
+<style scoped>
+.deck-study-actions { margin-bottom: 16px; }
+</style>

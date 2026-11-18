@@ -15,13 +15,12 @@ export function useDeckNavigation(decks: Readonly<Ref<Deck[]>>, cards: Readonly<
     }
     return groups;
   });
-  const selectedCards = computed(() => {
-    const deck = selectedDeck.value;
-    if (!deck) return [];
-    const deckIds = new Set(childDecks.value.get(deck.id)?.map((child) => child.id));
-    deckIds.add(deck.id);
+  function cardsForDeck(deckId: number) {
+    const deckIds = new Set(childDecks.value.get(deckId)?.map((child) => child.id));
+    deckIds.add(deckId);
     return cards.value.filter((card) => deckIds.has(card.deckId));
-  });
+  }
+  const selectedCards = computed(() => selectedDeck.value ? cardsForDeck(selectedDeck.value.id) : []);
   const counts = computed(() => {
     const result = new Map<number, number>();
     for (const card of cards.value) {
@@ -44,5 +43,5 @@ export function useDeckNavigation(decks: Readonly<Ref<Deck[]>>, cards: Readonly<
     return root && currentDeckId === rootId ? [...children, root] : children;
   }
 
-  return { selectedId, selectedDeck, childDecks, selectedCards, counts, restoreSelection, cardDeckOptions };
+  return { selectedId, selectedDeck, childDecks, selectedCards, cardsForDeck, counts, restoreSelection, cardDeckOptions };
 }
